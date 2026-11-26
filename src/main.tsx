@@ -421,13 +421,13 @@ function App() {
                   )}
                 </section>
               </div>
-              {manager && !w.candidates.length && (
+              {manager && !w.jobs.some((job) => job.sampleSet === "hiring-progress") && (
                 <div className="sample">
                   <div>
                     <h3>Try the full workflow</h3>
                     <p>
-                      Load a fictional IT Support job and candidate, then try
-                      screening and a client introduction.
+                      Load fictional jobs and candidates to see which jobs are
+                      filled, partly filled, or still open.
                     </p>
                   </div>
                   <button

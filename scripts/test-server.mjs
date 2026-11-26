@@ -52,8 +52,8 @@ async function act(action, payload, user = "owner", revision = w.revision) {
   return w;
 }
 await act("demo.load", {});
-assert.equal(w.jobs.length, 1);
-assert.equal(w.candidates.length, 1);
+assert.equal(w.jobs.length, 4);
+assert.equal(w.candidates.length, 8);
 const cid = w.candidates[0].id,
   jid = w.jobs[0].id;
 // Existing job records can receive the new order details without a data migration.
@@ -206,7 +206,7 @@ await assert.rejects(
   /access/,
 );
 await act("candidate.delete", { id: cid });
-assert.equal(w.candidates.length, 0);
+assert.equal(w.candidates.length, 7);
 assert.equal(w.tasks.length, 0);
 await assert.rejects(
   () => api(new Request("https://agency.test/api/session"), env),

@@ -12,6 +12,7 @@ export type Job = {
   location: string;
   salary: string;
   headcount?: number | null;
+  sampleSet?: string;
   workingHours?: string;
   allowances?: string;
   interviewDetails?: string;

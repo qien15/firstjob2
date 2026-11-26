@@ -316,51 +316,131 @@ function mutate(state, member, action, p) {
     assert(["Manager", "Recruiter"].includes(role), "Invalid role.");
     Object.assign(target, { role, active: !!p.active });
   } else if (action === "demo.load") {
-    assert(manager(member), "Manager access required.", 403);
     assert(
-      !state.jobs.some((j) => j.sample),
-      "Example records already loaded.",
+      !state.jobs.some((j) => j.sampleSet === "hiring-progress"),
+      "These sample records are already loaded.",
     );
-    const jobid = id(),
-      cid = id();
-    state.jobs.push({
-      id: jobid,
-      sample: true,
-      title: "IT Support Executive",
-      client: "Example Client",
-      location: "Johor Bahru",
-      salary: "RM3,000–RM3,800",
-      must: "Windows\nNetworking\nPrinter troubleshooting",
-      nice: "SQL\nGit",
-      description:
-        "Support office computers, troubleshoot networks and maintain printers.",
-      status: "Open",
-      assignee: member.id,
-      created: now,
-      updated: now,
-    });
-    state.candidates.push({
-      id: cid,
-      name: "Alex Tan (Example)",
-      contact: "alex@example.com",
-      education: "Diploma in Computer Science",
-      experience: "Web development coursework",
-      salary: "RM3,200",
-      availability: "One month notice",
-      location: "Johor Bahru",
-      resume:
-        "Alex Tan\nDiploma in Computer Science\nSkills: Windows, Git\nUsed MySQL to store player scores and track level progress.\nConfigured a small office network and tested Wi-Fi connectivity during a course project.",
-      filename: "Example resume",
-      job: jobid,
-      stage: "New",
-      assignee: member.id,
-      answers: {},
-      verified: {},
-      summary: "",
-      events: [],
-      created: now,
-      updated: now,
-    });
+    if (!state.jobs.some((j) => j.sample)) {
+      const jobid = id(),
+        cid = id();
+      state.jobs.push({
+        id: jobid,
+        sample: true,
+        title: "IT Support Executive",
+        client: "Example Client",
+        location: "Johor Bahru",
+        salary: "RM3,000–RM3,800",
+        must: "Windows\nNetworking\nPrinter troubleshooting",
+        nice: "SQL\nGit",
+        description:
+          "Support office computers, troubleshoot networks and maintain printers.",
+        headcount: 2,
+        status: "Open",
+        assignee: member.id,
+        created: now,
+        updated: now,
+      });
+      state.candidates.push({
+        id: cid,
+        name: "Alex Tan (Example)",
+        contact: "alex@example.com",
+        education: "Diploma in Computer Science",
+        experience: "Web development coursework",
+        salary: "RM3,200",
+        availability: "One month notice",
+        location: "Johor Bahru",
+        resume:
+          "Alex Tan\nDiploma in Computer Science\nSkills: Windows, Git\nUsed MySQL to store player scores and track level progress.\nConfigured a small office network and tested Wi-Fi connectivity during a course project.",
+        filename: "Example resume",
+        job: jobid,
+        stage: "New",
+        assignee: member.id,
+        answers: {},
+        verified: {},
+        summary: "",
+        events: [],
+        created: now,
+        updated: now,
+      });
+    }
+    const examples = [
+      {
+        title: "Warehouse Assistant",
+        location: "Tampoi",
+        salary: "RM2,000–RM2,400",
+        headcount: 2,
+        must: "Stock checks",
+        description: "Check incoming stock and prepare items for dispatch.",
+        candidates: [
+          ["Hana Lee", "Placed", "Checked incoming stock against delivery orders."],
+          ["Amir Lim", "Placed", "Picked and packed orders for dispatch."],
+        ],
+      },
+      {
+        title: "Customer Service Assistant",
+        location: "Johor Bahru",
+        salary: "RM2,400–RM3,000",
+        headcount: 4,
+        must: "Customer enquiries",
+        description: "Answer customer enquiries and record requests.",
+        candidates: [
+          ["Maya Chen", "Placed", "Answered customer enquiries and recorded follow-ups."],
+          ["Danish Noor", "Interview", "Helped customers track orders by phone."],
+          ["Aina Wong", "Screening", "Recorded service requests in a shared spreadsheet."],
+        ],
+      },
+      {
+        title: "Production Operator",
+        location: "Gelang Patah",
+        salary: "RM2,200–RM2,800",
+        headcount: 3,
+        must: "Quality checks",
+        description: "Operate production equipment and perform basic quality checks.",
+        candidates: [
+          ["Sara Tan", "New", "Completed basic quality checks during practical training."],
+          ["Irfan Teo", "Submitted", "Recorded measurements and reported defects to a supervisor."],
+        ],
+      },
+    ];
+    for (const { candidates, ...example } of examples) {
+      const job = id();
+      state.jobs.push({
+        ...example,
+        id: job,
+        sample: true,
+        sampleSet: "hiring-progress",
+        title: example.title + " (Example)",
+        client: "Example Client",
+        nice: "",
+        status: "Open",
+        assignee: member.id,
+        created: now,
+        updated: now,
+      });
+      for (const [name, stage, experience] of candidates) {
+        state.candidates.push({
+          id: id(),
+          name: name + " (Example)",
+          contact: "",
+          education: "",
+          experience,
+          salary: "",
+          availability: "",
+          location: example.location,
+          resume: name + "\n" + experience,
+          filename: "Example resume",
+          job,
+          stage,
+          assignee: member.id,
+          answers: {},
+          verified: {},
+          summary: "",
+          events: [],
+          created: now,
+          updated: now,
+        });
+      }
+    }
   } else throw new ApiError("Unknown action.");
   state.revision++;
   return state;
