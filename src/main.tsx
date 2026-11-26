@@ -533,74 +533,88 @@ function App() {
           )}
           {page === "Jobs" && (
             <div className="job-grid">
-              {w.jobs.map((j) => (
-                <article className="panel job-card" key={j.id}>
-                  <div className="section-row">
-                    <span className="badge">{j.status}</span>
-                    <span className="muted">
-                      {w.candidates.filter((c) => c.job === j.id).length}{" "}
-                      candidates
-                    </span>
-                  </div>
-                  <h2>{j.title}</h2>
-                  <p>
-                    {j.client} · {j.location}
-                  </p>
-                  <p className="salary">{j.salary || "Salary not entered"}</p>
-                  <dl className="job-meta">
-                    <div>
-                      <dt>Recruitment headcount</dt>
-                      <dd>
-                        {j.headcount == null
-                          ? "Not recorded"
-                          : `${j.headcount} people`}
-                      </dd>
+              {w.jobs.map((j) => {
+                const jobCandidates = w.candidates.filter((c) => c.job === j.id);
+                const placed = jobCandidates.filter((c) => c.stage === "Placed").length;
+                const remaining =
+                  j.headcount == null ? null : Math.max(0, j.headcount - placed);
+                return (
+                  <article className="panel job-card" key={j.id}>
+                    <div className="section-row">
+                      <span className="badge">{j.status}</span>
+                      <span className="muted">
+                        {jobCandidates.length}{" "}
+                        candidates
+                      </span>
                     </div>
-                    <div>
-                      <dt>Working hours</dt>
-                      <dd>{j.workingHours || "Not recorded"}</dd>
+                    <h2>{j.title}</h2>
+                    <p>
+                      {j.client} · {j.location}
+                    </p>
+                    <p className="salary">{j.salary || "Salary not entered"}</p>
+                    <dl className="job-meta">
+                      <div>
+                        <dt>Recruitment headcount</dt>
+                        <dd>
+                          {j.headcount == null
+                            ? "Not recorded"
+                            : `${j.headcount} people`}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Placed</dt>
+                        <dd>{placed}</dd>
+                      </div>
+                      <div>
+                        <dt>Remaining openings</dt>
+                        <dd>{remaining ?? "Set a headcount"}</dd>
+                      </div>
+                      <div>
+                        <dt>Working hours</dt>
+                        <dd>{j.workingHours || "Not recorded"}</dd>
+                      </div>
+                      <div>
+                        <dt>Allowances</dt>
+                        <dd>{j.allowances || "Not recorded"}</dd>
+                      </div>
+                      <div>
+                        <dt>Last confirmed with client</dt>
+                        <dd>{j.lastConfirmed || "Not recorded"}</dd>
+                      </div>
+                      <div className="job-interview">
+                        <dt>Interview arrangements</dt>
+                        <dd>{j.interviewDetails || "Not recorded"}</dd>
+                      </div>
+                    </dl>
+                    <div className="requirement-list">
+                      <strong>Must have</strong>
+                      {j.must
+                        .split("\n")
+                        .filter(Boolean)
+                        .map((r, i) => (
+                          <span key={i}>{r}</span>
+                        ))}
                     </div>
-                    <div>
-                      <dt>Allowances</dt>
-                      <dd>{j.allowances || "Not recorded"}</dd>
+                    <small>Assigned to {assignee(j.assignee)}</small>
+                    <div className="buttons">
+                      <button
+                        onClick={() => setModal({ kind: "job", record: j })}
+                      >
+                        Edit job
+                      </button>
+                      <button
+                        onClick={() => {
+                          setCompareJob(j.id);
+                          setSelected([]);
+                          setPage("Compare");
+                        }}
+                      >
+                        Compare candidates
+                      </button>
                     </div>
-                    <div>
-                      <dt>Last confirmed with client</dt>
-                      <dd>{j.lastConfirmed || "Not recorded"}</dd>
-                    </div>
-                    <div className="job-interview">
-                      <dt>Interview arrangements</dt>
-                      <dd>{j.interviewDetails || "Not recorded"}</dd>
-                    </div>
-                  </dl>
-                  <div className="requirement-list">
-                    <strong>Must have</strong>
-                    {j.must
-                      .split("\n")
-                      .filter(Boolean)
-                      .map((r, i) => (
-                        <span key={i}>{r}</span>
-                      ))}
-                  </div>
-                  <small>Assigned to {assignee(j.assignee)}</small>
-                  <div className="buttons">
-                    <button
-                      onClick={() => setModal({ kind: "job", record: j })}
-                    >
-                      Edit job
-                    </button>
-                    <button
-                      onClick={() => {
-                        setCompareJob(j.id);
-                        setSelected([]);
-                        setPage("Compare");
-                      }}
-                    >
-                      Compare candidates
-                    </button>
-                  </div>
-                </article>
-              ))}
+                  </article>
+                );
+              })}
               {!w.jobs.length && (
                 <Empty
                   title="Add a client job"
