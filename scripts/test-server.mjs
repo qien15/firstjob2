@@ -208,6 +208,43 @@ await assert.rejects(
 await act("candidate.delete", { id: cid });
 assert.equal(w.candidates.length, 7);
 assert.equal(w.tasks.length, 0);
+const sampleJob = w.jobs[0].id;
+await act("job.save", {
+  title: "Custom job",
+  client: "Custom client",
+  status: "Open",
+});
+await act("candidate.save", {
+  name: "Custom candidate",
+  resume: "Custom resume",
+  stage: "New",
+  job: sampleJob,
+});
+const customCandidate = w.candidates.at(-1).id;
+await act("followup.add", {
+  id: customCandidate,
+  note: "Keep this note",
+  next: "Keep this follow-up",
+  date: "2026-12-15",
+});
+await act("followup.add", {
+  id: w.candidates[0].id,
+  note: "Sample note",
+  date: "2026-12-15",
+});
+const storedWorkspace = [...env.BUCKET.objects.values()].find(
+  ({ value }) => value.id === w.id,
+).value;
+delete storedWorkspace.candidates[0].sample;
+await act("demo.clear", {});
+assert.deepEqual(w.jobs.map((job) => job.title), ["Custom job"]);
+assert.deepEqual(w.candidates.map((candidate) => candidate.id), [customCandidate]);
+assert.equal(w.candidates[0].job, "");
+assert.equal(w.candidates[0].events[0].note, "Keep this note");
+assert.deepEqual(w.tasks.map((task) => task.title), ["Keep this follow-up"]);
+await act("demo.load", {});
+assert.equal(w.jobs.length, 5);
+assert.equal(w.candidates.length, 9);
 await assert.rejects(
   () => api(new Request("https://agency.test/api/session"), env),
   /Sign in/,

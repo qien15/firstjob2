@@ -77,6 +77,50 @@ function validateAssignee(state, uid) {
     "Choose an active team member.",
   );
 }
+const sampleJobsWithCandidates = [
+  {
+    title: "Warehouse Assistant",
+    location: "Tampoi",
+    salary: "RM2,000–RM2,400",
+    headcount: 2,
+    must: "Stock checks",
+    description: "Check incoming stock and prepare items for dispatch.",
+    candidates: [
+      ["Hana Lee", "Placed", "Checked incoming stock against delivery orders."],
+      ["Amir Lim", "Placed", "Picked and packed orders for dispatch."],
+    ],
+  },
+  {
+    title: "Customer Service Assistant",
+    location: "Johor Bahru",
+    salary: "RM2,400–RM3,000",
+    headcount: 4,
+    must: "Customer enquiries",
+    description: "Answer customer enquiries and record requests.",
+    candidates: [
+      ["Maya Chen", "Placed", "Answered customer enquiries and recorded follow-ups."],
+      ["Danish Noor", "Interview", "Helped customers track orders by phone."],
+      ["Aina Wong", "Screening", "Recorded service requests in a shared spreadsheet."],
+    ],
+  },
+  {
+    title: "Production Operator",
+    location: "Gelang Patah",
+    salary: "RM2,200–RM2,800",
+    headcount: 3,
+    must: "Quality checks",
+    description: "Operate production equipment and perform basic quality checks.",
+    candidates: [
+      ["Sara Tan", "New", "Completed basic quality checks during practical training."],
+      ["Irfan Teo", "Submitted", "Recorded measurements and reported defects to a supervisor."],
+    ],
+  },
+];
+const exampleCandidates = sampleJobsWithCandidates.flatMap((job) => job.candidates);
+
+const legacySampleResume =
+  "Alex Tan\nDiploma in Computer Science\nSkills: Windows, Git\nUsed MySQL to store player scores and track level progress.\nConfigured a small office network and tested Wi-Fi connectivity during a course project.";
+
 function mutate(state, member, action, p) {
   const now = new Date().toISOString();
   if (action === "job.save") {
@@ -315,7 +359,43 @@ function mutate(state, member, action, p) {
     const role = member.role === "Owner" ? p.role : "Recruiter";
     assert(["Manager", "Recruiter"].includes(role), "Invalid role.");
     Object.assign(target, { role, active: !!p.active });
+  } else if (action === "demo.clear") {
+    assert(manager(member), "Manager access required.", 403);
+    const sampleJobs = new Set(
+      state.jobs.filter((job) => job.sample === true).map((job) => job.id),
+    );
+    const sampleCreatedDates = new Set(
+      state.jobs.filter((job) => sampleJobs.has(job.id)).map((job) => job.created),
+    );
+    const sampleCandidates = new Set(
+      state.candidates
+        .filter(
+          (candidate) =>
+            candidate.sample === true ||
+            (sampleCreatedDates.has(candidate.created) &&
+              candidate.filename === "Example resume" &&
+              (candidate.resume === legacySampleResume ||
+                exampleCandidates.some(
+                  ([name, , experience]) =>
+                    candidate.name === name + " (Example)" &&
+                    candidate.resume === name + "\n" + experience,
+                ))),
+        )
+        .map((candidate) => candidate.id),
+    );
+    state.jobs = state.jobs.filter((job) => !sampleJobs.has(job.id));
+    state.candidates = state.candidates.filter(
+      (candidate) => !sampleCandidates.has(candidate.id),
+    );
+    for (const candidate of state.candidates) {
+      if (sampleJobs.has(candidate.job)) {
+        candidate.job = "";
+        candidate.updated = now;
+      }
+    }
+    state.tasks = state.tasks.filter((task) => !sampleCandidates.has(task.candidate));
   } else if (action === "demo.load") {
+    assert(manager(member), "Manager access required.", 403);
     assert(
       !state.jobs.some((j) => j.sampleSet === "hiring-progress"),
       "These sample records are already loaded.",
@@ -342,6 +422,7 @@ function mutate(state, member, action, p) {
       });
       state.candidates.push({
         id: cid,
+        sample: true,
         name: "Alex Tan (Example)",
         contact: "alex@example.com",
         education: "Diploma in Computer Science",
@@ -349,8 +430,7 @@ function mutate(state, member, action, p) {
         salary: "RM3,200",
         availability: "One month notice",
         location: "Johor Bahru",
-        resume:
-          "Alex Tan\nDiploma in Computer Science\nSkills: Windows, Git\nUsed MySQL to store player scores and track level progress.\nConfigured a small office network and tested Wi-Fi connectivity during a course project.",
+        resume: legacySampleResume,
         filename: "Example resume",
         job: jobid,
         stage: "New",
@@ -363,46 +443,7 @@ function mutate(state, member, action, p) {
         updated: now,
       });
     }
-    const examples = [
-      {
-        title: "Warehouse Assistant",
-        location: "Tampoi",
-        salary: "RM2,000–RM2,400",
-        headcount: 2,
-        must: "Stock checks",
-        description: "Check incoming stock and prepare items for dispatch.",
-        candidates: [
-          ["Hana Lee", "Placed", "Checked incoming stock against delivery orders."],
-          ["Amir Lim", "Placed", "Picked and packed orders for dispatch."],
-        ],
-      },
-      {
-        title: "Customer Service Assistant",
-        location: "Johor Bahru",
-        salary: "RM2,400–RM3,000",
-        headcount: 4,
-        must: "Customer enquiries",
-        description: "Answer customer enquiries and record requests.",
-        candidates: [
-          ["Maya Chen", "Placed", "Answered customer enquiries and recorded follow-ups."],
-          ["Danish Noor", "Interview", "Helped customers track orders by phone."],
-          ["Aina Wong", "Screening", "Recorded service requests in a shared spreadsheet."],
-        ],
-      },
-      {
-        title: "Production Operator",
-        location: "Gelang Patah",
-        salary: "RM2,200–RM2,800",
-        headcount: 3,
-        must: "Quality checks",
-        description: "Operate production equipment and perform basic quality checks.",
-        candidates: [
-          ["Sara Tan", "New", "Completed basic quality checks during practical training."],
-          ["Irfan Teo", "Submitted", "Recorded measurements and reported defects to a supervisor."],
-        ],
-      },
-    ];
-    for (const { candidates, ...example } of examples) {
+    for (const { candidates, ...example } of sampleJobsWithCandidates) {
       const job = id();
       state.jobs.push({
         ...example,
@@ -420,6 +461,7 @@ function mutate(state, member, action, p) {
       for (const [name, stage, experience] of candidates) {
         state.candidates.push({
           id: id(),
+          sample: true,
           name: name + " (Example)",
           contact: "",
           education: "",

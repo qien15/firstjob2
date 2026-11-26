@@ -12,6 +12,7 @@ export type Job = {
   location: string;
   salary: string;
   headcount?: number | null;
+  sample?: boolean;
   sampleSet?: string;
   workingHours?: string;
   allowances?: string;
@@ -28,6 +29,7 @@ export type Job = {
 export type Event = { id: string; date: string; by: string; note: string };
 export type Candidate = {
   id: string;
+  sample?: boolean;
   name: string;
   contact: string;
   education: string;

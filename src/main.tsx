@@ -421,21 +421,31 @@ function App() {
                   )}
                 </section>
               </div>
-              {manager && !w.jobs.some((job) => job.sampleSet === "hiring-progress") && (
+              {manager && (
                 <div className="sample">
                   <div>
-                    <h3>Try the full workflow</h3>
-                    <p>
-                      Load fictional jobs and candidates to see which jobs are
-                      filled, partly filled, or still open.
-                    </p>
+                    <h3>Sample records</h3>
+                    <p>Try hiring with fictional jobs and candidates.</p>
                   </div>
-                  <button
-                    onClick={() => action("demo.load", {})}
-                    disabled={busy}
-                  >
-                    Load sample records
-                  </button>
+                  <div className="buttons">
+                    {!w.jobs.some((job) => job.sampleSet === "hiring-progress") && (
+                      <button
+                        onClick={() => action("demo.load", {})}
+                        disabled={busy}
+                      >
+                        Load sample records
+                      </button>
+                    )}
+                    {(w.jobs.some((job) => job.sample) ||
+                      w.candidates.some((candidate) => candidate.sample)) && (
+                      <button
+                        onClick={() => action("demo.clear", {})}
+                        disabled={busy}
+                      >
+                        Clear sample records
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
             </>
